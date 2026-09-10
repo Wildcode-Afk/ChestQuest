@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ChessQuest</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+<defs>
+<linearGradient id="gWhite" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0%" stop-color="#fffaf0"/>
+  <stop offset="55%" stop-color="#f3e6c8"/>
+  <stop offset="100%" stop-color="#dcc593"/>
+</linearGradient>
+<linearGradient id="gBlack" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0%" stop-color="#3a2e22"/>
+  <stop offset="55%" stop-color="#1c140d"/>
+  <stop offset="100%" stop-color="#0a0704"/>
+</linearGradient>
+<symbol id="pc-P" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="90.5" rx="19" ry="2.2" fill="#000" opacity="0.22" stroke="none"/>
+  <path d="M31,90 C31,86 34,83.5 37,83.5 L63,83.5 C66,83.5 69,86 69,90 Z"/>
+  <rect x="35" y="79" width="30" height="5" rx="2.3"/>
+  <path d="M41,79 C41,73 43,69 46,66 C42,63 42,58 45,55 C47,53 47,50.5 49,48.5
+  C44,47 42,43 45,39 C47,36.5 49,35 50,35 C51,35 53,36.5 55,39
+  C58,43 56,47 51,48.5 C53,50.5 53,53 55,55 C58,58 58,63 54,66
+  C57,69 59,73 59,79 Z"/>
+  <circle cx="50" cy="32" r="12.5"/>
+  <path class="pc-hl" d="M43,30 C43,24 47,20 51,20 C48,21 45,25 45,30 C45,33 46,36 48,38 C45,37 43,34 43,30 Z" fill="#fff" opacity="0.28" stroke="none"/>
+  <path class="pc-sh" d="M57,26 C58,32 56,40 51,44 C55,42 59,36 58,29 C58,27.5 57.5,26.5 57,26 Z" fill="#000" opacity="0.16" stroke="none"/>
+</symbol>
+<symbol id="pc-N" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="90.5" rx="20" ry="2.2" fill="#000" opacity="0.22" stroke="none"/>
+  <path d="M30,90 C30,86 33,83.5 36,83.5 L64,83.5 C67,83.5 70,86 70,90 Z"/>
+  <rect x="33" y="78.5" width="34" height="5.5" rx="2.4"/>
+  <path d="M34,78.5
+  C31,70 28,63 26,56
+  C20,54 14,51 11,46
+  C8,42 7,38 9,33
+  C10,29 12,26 15,23
+  C17,19 18,15 20,12
+  C21,10 22,9 23,8
+  C22,5 20,2 17,1
+  C17,4 19,7 22,8
+  C23,9 24,9 25,8
+  C26,5 28,3 31,2
+  C31,5 33,8 35,9
+  C42,5 51,6 59,10
+  C67,14 72,21 72,29
+  C73,37 69,44 63,48
+  C66,54 67,61 64,68
+  C67,71 68,74 66,78.5 Z"/>
+  <circle class="pc-eye" cx="21" cy="17" r="2.5" stroke="none"/>
+  <ellipse cx="11" cy="35" rx="2.2" ry="1.5" fill="#000" opacity="0.5" stroke="none" transform="rotate(-35 11 35)"/>
+  <path d="M11,42 C14,44.5 18,45 21,43.5" fill="none" stroke-width="1.6" opacity="0.5" stroke-linecap="round"/>
+  <path class="pc-hl" d="M23,36 C18,44 17,52 20,60 C17,52 17,42 21,34 Z" fill="#fff" opacity="0.25" stroke="none"/>
+  <path class="pc-sh" d="M60,36 C65,42 66,50 62,58 C65,50 65,40 62,33 Z" fill="#000" opacity="0.16" stroke="none"/>
+  <path class="pc-hl" d="M17,14 C14,18 14,23 17,27 C15,22 15,18 19,13 Z" fill="#fff" opacity="0.3" stroke="none"/>
+</symbol>
+<symbol id="pc-B" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="90.5" rx="18" ry="2.2" fill="#000" opacity="0.22" stroke="none"/>
+  <path d="M32,90 C32,86 35,83.5 38,83.5 L62,83.5 C65,83.5 68,86 68,90 Z"/>
+  <rect x="34" y="78.5" width="32" height="5.5" rx="2.4"/>
+  <path d="M37,78.5 C36,68 39,60 43,55 C38,52 37,45 41,40
+  C36,36 37,28 45,22 C47.5,20 52.5,20 55,22
+  C63,28 64,36 59,40 C63,45 62,52 57,55
+  C61,60 64,68 63,78.5 Z"/>
+  <path d="M44,30 L56,25" stroke-width="2.8" stroke-linecap="round"/>
+  <circle cx="50" cy="16.5" r="5.2"/>
+  <ellipse cx="50" cy="56" rx="13" ry="2.6" fill="none" stroke-width="2"/>
+  <path class="pc-hl" d="M42,45 C40,54 40,64 43,72 C40,62 40,50 43,42 Z" fill="#fff" opacity="0.25" stroke="none"/>
+  <path class="pc-sh" d="M58,42 C61,50 61,62 58,72 C61,64 61,54 59,45 Z" fill="#000" opacity="0.15" stroke="none"/>
+  <path class="pc-hl" d="M43,26 C42,30 43,34 46,37 C43,33 43,29 45,25 Z" fill="#fff" opacity="0.3" stroke="none"/>
+</symbol>
+<symbol id="pc-R" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="90.5" rx="20" ry="2.2" fill="#000" opacity="0.22" stroke="none"/>
+  <path d="M30,90 C30,86 33,83.5 36,83.5 L64,83.5 C67,83.5 70,86 70,90 Z"/>
+  <rect x="33" y="78.5" width="34" height="5.5" rx="2.4"/>
+  <path d="M35,78.5 L37,45 L63,45 L65,78.5 Z"/>
+  <rect x="33" y="41" width="34" height="6" rx="1.2"/>
+  <path d="M33,41 L33,25 L40,25 L40,30 L46,30 L46,25 L54,25 L54,30 L60,30 L60,25 L67,25 L67,41 Z"/>
+  <path class="pc-hl" d="M39,50 C38,60 38,70 41,78 C38,68 38,56 40,47 Z" fill="#fff" opacity="0.25" stroke="none"/>
+  <path class="pc-sh" d="M60,47 C62,58 62,70 58,78 C63,68 63,55 61,46 Z" fill="#000" opacity="0.16" stroke="none"/>
+  <path class="pc-hl" d="M35,30 L35,38 L38,38 L38,30 Z" fill="#fff" opacity="0.22" stroke="none"/>
+</symbol>
+<symbol id="pc-Q" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="90.5" rx="19" ry="2.2" fill="#000" opacity="0.22" stroke="none"/>
+  <path d="M31,90 C31,86 34,83.5 37,83.5 L63,83.5 C66,83.5 69,86 69,90 Z"/>
+  <rect x="34" y="78.5" width="32" height="5.5" rx="2.4"/>
+  <path d="M35,78.5 C34,68 37,58 42,52 C37,50 34,46 33,42
+  L37,42 L40,27 L43,42
+  L47,42 L50,17 L53,42
+  L57,42 L60,27 L63,42
+  L67,42
+  C66,46 63,50 58,52
+  C63,58 66,68 65,78.5 Z"/>
+  <circle cx="33" cy="42" r="2.4"/>
+  <circle cx="41.5" cy="26" r="2.6"/>
+  <circle cx="50" cy="16" r="3"/>
+  <circle cx="58.5" cy="26" r="2.6"/>
+  <circle cx="67" cy="42" r="2.4"/>
+  <ellipse cx="50" cy="53" rx="15" ry="2.6" fill="none" stroke-width="2"/>
+  <path class="pc-hl" d="M40,58 C37,66 37,74 40,80 C37,72 37,63 40,55 Z" fill="#fff" opacity="0.25" stroke="none"/>
+  <path class="pc-sh" d="M60,55 C63,63 63,72 60,80 C63,74 63,66 60,58 Z" fill="#000" opacity="0.15" stroke="none"/>
+</symbol>
+<symbol id="pc-K" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="90.5" rx="19" ry="2.2" fill="#000" opacity="0.22" stroke="none"/>
+  <path d="M31,90 C31,86 34,83.5 37,83.5 L63,83.5 C66,83.5 69,86 69,90 Z"/>
+  <rect x="34" y="78.5" width="32" height="5.5" rx="2.4"/>
+  <path d="M35,78.5 C34,66 38,55 44,50 C39,48 36,44 36,40
+  L64,40 C64,44 61,48 56,50 C62,55 66,66 65,78.5 Z"/>
+  <rect x="36" y="34" width="28" height="7" rx="1.6"/>
+  <circle cx="40" cy="37.5" r="1.7"/>
+  <circle cx="50" cy="37.5" r="1.7"/>
+  <circle cx="60" cy="37.5" r="1.7"/>
+  <rect x="46.5" y="16" width="7" height="19" rx="1.8"/>
+  <rect x="40" y="21" width="20" height="7" rx="1.8"/>
+  <ellipse cx="50" cy="51" rx="15" ry="2.6" fill="none" stroke-width="2"/>
+  <path class="pc-hl" d="M41,56 C38,64 38,72 41,78 C38,70 38,61 41,53 Z" fill="#fff" opacity="0.25" stroke="none"/>
+  <path class="pc-sh" d="M59,53 C62,61 62,70 59,78 C62,72 62,64 59,56 Z" fill="#000" opacity="0.15" stroke="none"/>
+</symbol>
+</defs>
+</svg>
+<div class="wrap">
+
+  <header>
+    <button class="crest-btn" id="homeCrestBtn" title="Retour à l'accueil">
+      <img class="crest" src="logo.png" alt="ChessQuest">
+    </button>
+    <div>
+      <div class="title">ChessQuest</div>
+      <div class="subtitle">Apprends, joue, progresse — un coup à la fois</div>
+    </div>
+    <div class="header-right">
+      <button class="sound-toggle-btn" id="soundToggleBtn" title="Activer/couper le son">🔊</button>
+      <div class="auth-bar" id="authBar"></div>
+    </div>
+  </header>
+
+  <div class="home-view" id="homeView">
+    <div class="home-hero">
+      <div class="home-hero-icon">♛</div>
+      <h2 class="display" id="homeGreeting">Bonjour !</h2>
+      <div class="home-ping-row" id="homePingRow" style="display:none;">
+        <span class="ping-dot" id="pingDot"></span>
+        <span id="homePingLabel">Ping : —</span>
+      </div>
+    </div>
+
+    <div class="intro-card">
+      Bienvenue sur <strong>ChessQuest</strong> : apprends les règles pas à pas avec les leçons, entraîne ta lecture tactique avec les puzzles, et affronte le Coach ou d'autres joueurs dans l'onglet Jouer. Ici, sur l'accueil, retrouve ton profil et discute avec les joueurs connectés.
+    </div>
+
+    <div class="chat-card">
+      <div class="chat-head">
+        <span>💬 Joueurs connectés</span>
+        <span class="chat-online-count" id="chatOnlineCount">0 en ligne</span>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-empty" id="chatEmpty">Aucun message pour l'instant.</div>
+      </div>
+      <div class="chat-input-row" id="chatInputRow">
+        <input type="text" id="chatInput" placeholder="Écris un message…" maxlength="300">
+        <button class="btn primary" id="chatSendBtn">Envoyer</button>
+      </div>
+      <div class="chat-locked-note" id="chatLockedNote" style="display:none;">🔒 Connecte-toi pour discuter avec les autres joueurs.</div>
+    </div>
+
+    <div class="stat-card" id="homeLiveCard">
+      <div class="stat-head-row">
+        <div class="stat-head">📺 En direct</div>
+        <button class="stat-head-link" id="homeLiveSeeAll">Tout voir →</button>
+      </div>
+      <div class="live-list" id="homeLiveList"><div class="stat-empty">Chargement…</div></div>
+    </div>
+
+    <div class="stat-card" id="leaderboardCard">
+      <div class="stat-head">🏆 Classement</div>
+      <div class="stat-list" id="leaderboardList"><div class="stat-empty">Chargement…</div></div>
+    </div>
+
+    <div class="stat-card" id="historyCard">
+      <div class="stat-head">🕓 Dernières parties</div>
+      <div class="stat-list" id="historyList"><div class="stat-empty">Chargement…</div></div>
+    </div>
+
+    <div class="stat-card" id="badgesCard">
+      <div class="stat-head">🎖️ Badges</div>
+      <div class="badges-grid" id="badgesGrid"></div>
+    </div>
+  </div>
+
+  <div class="home-view" id="playMenuView" style="display:none;">
+    <div class="home-hero">
+      <div class="home-hero-icon">♜</div>
+      <h2 class="display">Jouer</h2>
+      <p>Choisis ton adversaire.</p>
+    </div>
+    <div class="home-cards" id="playMenuCards">
+      <div class="home-card" data-play="ai">
+        <div class="home-card-icon">🤖</div>
+        <div class="home-card-title">Contre l'IA</div>
+        <div class="home-card-desc">Affronte le Coach : de 100 à 2000 Elo, ou en mode progressif.</div>
+      </div>
+      <div class="home-card" data-play="coach">
+        <div class="home-card-icon">🎓</div>
+        <div class="home-card-title">Contre l'entraîneur</div>
+        <div class="home-card-desc">Chaque coup est analysé : meilleur, bon, imprécis, erreur, gaffe. Bilan complet en fin de partie.</div>
+      </div>
+      <div class="home-card" data-play="friend">
+        <div class="home-card-icon">🔗</div>
+        <div class="home-card-title">Contre un ami</div>
+        <div class="home-card-desc">Génère un lien à partager et jouez ensemble en ligne.</div>
+      </div>
+      <div class="home-card" data-play="random">
+        <div class="home-card-icon">🌐</div>
+        <div class="home-card-title">Contre un joueur</div>
+        <div class="home-card-desc">Trouve un adversaire dans le salon et lance une partie.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-view" id="onlineView" style="display:none;">
+    <div class="home-hero">
+      <div class="home-hero-icon">🌐</div>
+      <h2 class="display" id="onlineViewTitle">Jouer en ligne</h2>
+    </div>
+    <div id="onlineViewContent"></div>
+  </div>
+
+  <div class="home-view" id="profileView" style="display:none;">
+    <div class="home-hero">
+      <div class="home-hero-icon">👤</div>
+      <h2 class="display">Mon profil</h2>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-head">Profil public</div>
+      <label class="profile-field-label" for="profileUsernameInput">Pseudo</label>
+      <div class="profile-username-row">
+        <input type="text" id="profileUsernameInput" placeholder="Pseudo" maxlength="24">
+      </div>
+      <label class="profile-field-label" for="profileCountrySelect">Pays</label>
+      <select id="profileCountrySelect"><option value="">— Aucun —</option></select>
+      <label class="profile-field-label" for="profileBadgeSelect">Badge à la une</label>
+      <select id="profileBadgeSelect"><option value="">— Aucun —</option></select>
+      <div class="profile-field-hint">Le drapeau et le badge choisi s'affichent à côté de ton pseudo dans le chat et, plus tard, en partie contre d'autres joueurs.</div>
+      <button class="btn primary" id="profileUsernameSaveBtn" style="margin-top:10px;">Enregistrer</button>
+      <div class="profile-status" id="profileUsernameStatus"></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-head">Compte</div>
+      <label class="profile-field-label" for="profileEmailInput">Adresse email</label>
+      <div class="profile-username-row">
+        <input type="email" id="profileEmailInput" placeholder="Email" autocomplete="email">
+        <button class="btn" id="profileEmailSaveBtn">Changer</button>
+      </div>
+      <div class="profile-field-hint">Un email de confirmation sera envoyé à ta nouvelle adresse ; le changement ne prend effet qu'après confirmation.</div>
+      <div class="profile-status" id="profileEmailStatus"></div>
+
+      <label class="profile-field-label" for="profileNewPasswordInput" style="margin-top:18px;">Nouveau mot de passe</label>
+      <div class="auth-password-row">
+        <input type="password" id="profileNewPasswordInput" placeholder="Nouveau mot de passe" autocomplete="new-password">
+        <button type="button" class="auth-eye-btn" id="profileNewPasswordToggle" aria-label="Afficher le mot de passe">👁️</button>
+      </div>
+      <label class="profile-field-label" for="profileConfirmPasswordInput">Confirmer le mot de passe</label>
+      <div class="auth-password-row">
+        <input type="password" id="profileConfirmPasswordInput" placeholder="Confirmer le mot de passe" autocomplete="new-password">
+        <button type="button" class="auth-eye-btn" id="profileConfirmPasswordToggle" aria-label="Afficher le mot de passe">👁️</button>
+      </div>
+      <button class="btn" id="profilePasswordSaveBtn" style="width:100%; margin-top:8px;">Changer le mot de passe</button>
+      <div class="profile-status" id="profilePasswordStatus"></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-head">Statistiques</div>
+      <div class="profile-stats-grid" id="profileStatsGrid"></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-head">🎖️ Badges</div>
+      <div class="badges-grid" id="profileBadgesGrid"></div>
+    </div>
+
+    <div class="stat-card danger-card">
+      <div class="stat-head">Zone dangereuse</div>
+      <p class="danger-text">Supprimer ton compte efface définitivement ta progression, ton historique de parties et tes messages du chat. Cette action est irréversible.</p>
+      <label class="danger-confirm-row">
+        <input type="checkbox" id="profileDeleteConfirm">
+        Je comprends que cette action est irréversible.
+      </label>
+      <button class="btn danger" id="profileDeleteBtn" disabled>Supprimer mon compte</button>
+    </div>
+  </div>
+
+  <div class="home-view" id="liveView" style="display:none;">
+    <div class="home-hero">
+      <div class="home-hero-icon">📺</div>
+      <h2 class="display">Live</h2>
+      <p>Les parties en cours en ce moment, en direct.</p>
+    </div>
+    <div class="live-list" id="liveList">
+      <div class="stat-empty">Chargement…</div>
+    </div>
+  </div>
+
+  <div class="home-view" id="spectateView" style="display:none;">
+    <div class="home-hero">
+      <div class="home-hero-icon">👁️</div>
+      <h2 class="display">Suivi en direct</h2>
+    </div>
+    <div class="stat-card">
+      <div class="spectate-player-row" id="spectatePlayerRow"></div>
+      <div id="spectateBoardWrap"></div>
+      <div class="spectate-meta" id="spectateMeta"></div>
+      <button class="btn" id="spectateBackBtn" style="width:100%; margin-top:12px;">← Retour au direct</button>
+    </div>
+  </div>
+
+  <div class="home-view" id="reviewView" style="display:none;">
+    <div class="home-hero">
+      <div class="home-hero-icon">🔍</div>
+      <h2 class="display">Revue de partie</h2>
+    </div>
+    <div class="stat-card">
+      <div class="spectate-meta" id="reviewMeta"></div>
+      <div id="reviewBoardWrap" style="margin-top:12px;"></div>
+      <div class="review-nav-row">
+        <button class="btn" id="reviewFirstBtn">⏮</button>
+        <button class="btn" id="reviewPrevBtn">◀</button>
+        <span class="review-ply-label" id="reviewPlyLabel">0 / 0</span>
+        <button class="btn" id="reviewNextBtn">▶</button>
+        <button class="btn" id="reviewLastBtn">⏭</button>
+      </div>
+      <div class="review-move-list" id="reviewMoveList"></div>
+      <button class="btn primary" id="reviewAnalyzeBtn" style="width:100%; margin-top:12px;">🔎 Analyser cette partie</button>
+      <div id="reviewAnalysisSummary"></div>
+    </div>
+  </div>
+
+  <div class="setup-view" id="practiceSetup">
+    <div class="setup-card">
+      <h3 class="display" id="setupTitle">Configurer la partie</h3>
+      <div class="setup-sub" id="setupSub">Choisis le niveau du Coach et ta couleur avant de commencer.</div>
+
+      <div class="setup-group">
+        <div class="setup-label">Niveau du Coach</div>
+        <div class="choice-row">
+          <div class="choice-btn" data-aimode="progressive">IA progressive</div>
+          <div class="choice-btn" data-aimode="fixed">Niveau fixe</div>
+        </div>
+        <div class="setup-hint" id="progressiveHint">Le Coach commence modeste et devient plus fort à chaque partie que tu gagnes (et plus doux si tu perds).</div>
+        <div class="elo-slider-wrap" id="eloSliderWrap" style="display:none;">
+          <div class="elo-value" id="eloValue">800</div>
+          <div class="elo-tier" id="eloTier">Amateur</div>
+          <input type="range" id="eloSlider" min="100" max="2000" step="50" value="800">
+        </div>
+      </div>
+
+      <div class="setup-group">
+        <div class="setup-label">Ta couleur</div>
+        <div class="choice-row">
+          <div class="choice-btn" data-color="w">♙ Blancs</div>
+          <div class="choice-btn" data-color="b">♟ Noirs</div>
+          <div class="choice-btn" data-color="random">🎲 Aléatoire</div>
+        </div>
+      </div>
+
+      <div class="setup-group">
+        <div class="setup-label">Contrôle du temps</div>
+        <div id="timeControlPicker"></div>
+      </div>
+
+      <button class="btn primary" id="startPracticeBtn" style="width:100%; margin-top:6px;">Commencer la partie</button>
+    </div>
+  </div>
+
+  <div class="layout" id="mainLayout">
+    <div class="col-left">
+      <div class="list-panel mobile-scroll" id="listPanel">
+        <div class="head" id="listHead">Programme</div>
+        <div class="puzzle-submode-row" id="puzzleSubmodeRow" style="display:none;">
+          <button class="submode-btn" id="submodeMateBtn" data-submode="mate">♟️ Mat en 1</button>
+          <button class="submode-btn" id="submodeSolitaireBtn" data-submode="solitaire">🃏 Échecs en solo</button>
+        </div>
+        <div class="inner" id="listInner"></div>
+      </div>
+    </div>
+
+    <div class="col-main">
+      <div class="board-card">
+        <div class="status-row">
+          <span id="turnLabel">Trait aux Blancs</span>
+          <span class="badge" id="statusBadge">en cours</span>
+        </div>
+        <div class="clocks-row" id="clocksRow" style="display:none;">
+          <div class="clock-chip" id="clockWhite"><span class="clock-label">Blancs</span><span class="clock-time" id="clockWhiteTime">--:--</span></div>
+          <div class="clock-chip" id="clockBlack"><span class="clock-label">Noirs</span><span class="clock-time" id="clockBlackTime">--:--</span></div>
+        </div>
+        <div class="board-outer">
+          <div class="board-frame">
+            <div class="board" id="board"></div>
+          </div>
+        </div>
+        <div class="captured-row">
+          <div class="side" id="capturedByWhite"></div>
+          <div class="side" id="capturedByBlack"></div>
+        </div>
+        <div class="moves-panel" id="movesPanel"></div>
+        <div class="quality-legend" id="qualityLegend" style="display:none;"></div>
+        <div id="promoOverlay"></div>
+      </div>
+
+      <div class="coach-card">
+        <div class="coach-avatar">♞</div>
+        <div class="coach-body">
+          <div class="coach-name">Coach Léo</div>
+          <div class="lesson-title" id="lessonTitle"></div>
+          <div class="lesson-desc" id="lessonDesc"></div>
+          <div class="coach-text" id="coachText">Choisis une leçon pour commencer, ou lance une partie libre.</div>
+          <div class="controls" id="controls"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+<nav class="footer-nav" id="footerNav">
+  <button class="footer-nav-btn active" data-nav="home">
+    <span class="footer-nav-icon">🏠</span><span>Accueil</span>
+  </button>
+  <button class="footer-nav-btn" data-nav="lessons">
+    <span class="footer-nav-icon">♞</span><span>Leçons</span>
+  </button>
+  <button class="footer-nav-btn" data-nav="puzzles">
+    <span class="footer-nav-icon">♟</span><span>Puzzle</span>
+  </button>
+  <button class="footer-nav-btn" data-nav="playmenu">
+    <span class="footer-nav-icon">⚔️</span><span>Jouer</span>
+  </button>
+  <button class="footer-nav-btn" data-nav="live">
+    <span class="footer-nav-icon">📺</span><span>Live</span>
+  </button>
+</nav>
+
+<div class="auth-modal-overlay" id="authModalOverlay" style="display:none;">
+  <div class="auth-modal">
+    <div class="auth-modal-head">
+      <span id="authModalTitle">Connexion</span>
+      <button class="auth-modal-close" id="authModalClose" aria-label="Fermer">✕</button>
+    </div>
+    <div class="auth-modal-body">
+      <input type="email" id="authEmail" placeholder="Email" autocomplete="email">
+      <input type="text" id="authUsername" placeholder="Pseudo" autocomplete="nickname" style="display:none;">
+      <div class="auth-password-row" id="authPasswordRow">
+        <input type="password" id="authPassword" placeholder="Mot de passe" autocomplete="current-password">
+        <button type="button" class="auth-eye-btn" id="authPasswordToggle" aria-label="Afficher le mot de passe">👁️</button>
+      </div>
+      <div class="auth-password-row" id="authPasswordConfirmRow" style="display:none;">
+        <input type="password" id="authPasswordConfirm" placeholder="Confirmer le mot de passe" autocomplete="new-password">
+        <button type="button" class="auth-eye-btn" id="authPasswordConfirmToggle" aria-label="Afficher le mot de passe">👁️</button>
+      </div>
+      <div class="auth-forgot-row" id="authForgotRow">
+        <a href="#" id="authForgotLink">Mot de passe oublié ?</a>
+      </div>
+      <div class="auth-error" id="authError"></div>
+      <button class="btn primary" id="authSubmitBtn" style="width:100%;">Se connecter</button>
+      <div class="auth-switch">
+        <span id="authSwitchText">Pas encore de compte ?</span>
+        <a href="#" id="authSwitchLink">Créer un compte</a>
+      </div>
+      <div class="auth-switch" id="authBackToSigninRow" style="display:none;">
+        <a href="#" id="authBackToSigninLink">← Retour à la connexion</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
