@@ -1,0 +1,7 @@
+{
+  "name": "chessquest",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  }
+}
