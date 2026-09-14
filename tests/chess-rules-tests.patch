@@ -1,0 +1,89 @@
+--- fresh/ChestQuest-main/tests/chess-rules.test.js	2026-09-10 18:31:21.000000000 +0000
++++ ChestQuest-main/tests/chess-rules.test.js	2026-09-12 11:28:25.165583394 +0000
+@@ -114,20 +114,25 @@
+ });
+ 
+ test('en passant capture is legal when the pawn double-jumps', () => {
++  // White pawn on e5 (file 4, rank index 4), black pawn just double-jumped
++  // to f5 (file 5, rank index 4), so the en-passant target square is f6
++  // (file 5, rank index 5).
+   const board = parseRows([
+     '. . . . . . . .',
+     '. . . . . . . .',
+     '. . . . . . . .',
++    '. . . . P p . .',
+     '. . . . . . . .',
+     '. . . . . . . .',
+-    '. . . . P . . .',
+     '. . . . . . . .',
+     '. . . . . . . .'
+   ]);
+-  const state = initState(board, 'w', {}, sq(4, 3));
+-  const move = { from: sq(4, 3), to: sq(5, 2), flags: { capture: true, enpassant: true } };
+-  assert.ok(legalMoves(state).some(m => m.from === sq(4, 3) && m.to === sq(5, 2) && m.flags.enpassant));
+-  assert.equal(applyMove(state, move).board[sq(5, 2)].type, 'P');
++  const state = initState(board, 'w', {}, sq(5, 5));
++  const move = { from: sq(4, 4), to: sq(5, 5), flags: { capture: true, enpassant: true } };
++  assert.ok(legalMoves(state).some(m => m.from === sq(4, 4) && m.to === sq(5, 5) && m.flags.enpassant));
++  const after = applyMove(state, move);
++  assert.equal(after.board[sq(5, 5)].type, 'P');
++  assert.equal(after.board[sq(5, 4)], null);
+ });
+ 
+ test('castling is illegal if the king passes through check', () => {
+@@ -147,14 +152,15 @@
+ });
+ 
+ test('promotion to queen is generated and applied', () => {
++  // White pawn on e7 (file 4, rank index 6) is one step from promoting.
+   const board = parseRows([
+     '. . . . . . . .',
++    '. . . . P . . .',
+     '. . . . . . . .',
+     '. . . . . . . .',
+     '. . . . . . . .',
+     '. . . . . . . .',
+     '. . . . . . . .',
+-    '. . . . . P . .',
+     '. . . . . . . .'
+   ]);
+   const state = initState(board, 'w');
+@@ -165,17 +171,19 @@
+ });
+ 
+ test('a direct checkmate is detected', () => {
++  // Classic corner mate: black king on a8, white queen on b7 (protected by
++  // the white king on b6). It is black to move.
+   const board = parseRows([
+     'k . . . . . . .',
++    '. Q . . . . . .',
++    '. K . . . . . .',
+     '. . . . . . . .',
+     '. . . . . . . .',
+     '. . . . . . . .',
+     '. . . . . . . .',
+-    '. . . . . . . .',
+-    '. . . . Q . . .',
+-    '. . . . K . . .'
++    '. . . . . . . .'
+   ]);
+-  const state = initState(board, 'w');
++  const state = initState(board, 'b');
+   assert.equal(gameStatus(state), 'checkmate');
+ });
+ 
+@@ -196,9 +204,12 @@
+ });
+ 
+ test('king detection works for both colors', () => {
++  // The board array is read top row first, but parseRows maps the top row
++  // to rank index 7 (black's back rank) and the bottom row to rank index 0
++  // (white's back rank) - matching how a real board diagram reads.
+   const board = initialBoard();
+-  assert.equal(kingIndex(board, 'w'), sq(4, 7));
+-  assert.equal(kingIndex(board, 'b'), sq(4, 0));
++  assert.equal(kingIndex(board, 'w'), sq(4, 0));
++  assert.equal(kingIndex(board, 'b'), sq(4, 7));
+ });
+ 
+ test('a king in check is reported correctly', () => {
