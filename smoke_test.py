@@ -23,6 +23,7 @@ REQUIRED_FILES = [
     "index.html",
     "style.css",
     "app.js",
+    "chess-core.js",
     "auth.js",
     "supabase-config.js",
     "setup.sql",
@@ -46,6 +47,7 @@ def check_html_references() -> None:
     expected = [
         "style.css",
         "app.js",
+        "chess-core.js",
         "auth.js",
         "supabase-config.js",
         "logo.png",

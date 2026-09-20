@@ -31,8 +31,9 @@ function makeElement() {
 }
 
 function loadChessEngine() {
-  const scriptPath = path.join(__dirname, '..', 'app.js');
-  const source = fs.readFileSync(scriptPath, 'utf8');
+  const coreSource = fs.readFileSync(path.join(__dirname, '..', 'chess-core.js'), 'utf8');
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const source = `${coreSource}\n${appSource}`;
 
   const document = {
     getElementById() { return makeElement(); },

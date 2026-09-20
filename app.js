@@ -1,52 +1,10 @@
 /* ============================================================
    MOTEUR D'ÉCHECS
+   Coordonnées, plateau, constantes de déplacement et état de
+   partie sont désormais dans chess-core.js (chargé avant ce
+   fichier). Ce fichier contient la logique de règles, l'IA et
+   l'interface.
    ============================================================ */
-function sq(file,rank){return rank*8+file;}
-function fileOf(i){return i&7;}
-function rankOf(i){return i>>3;}
-function sqName(i){return "abcdefgh"[fileOf(i)]+(rankOf(i)+1);}
-function algToIdx(name){ return sq("abcdefgh".indexOf(name[0]), parseInt(name.slice(1),10)-1); }
-function inBoard(f,r){return f>=0&&f<8&&r>=0&&r<8;}
-
-function emptyBoard(){return new Array(64).fill(null);}
-
-function parseRows(rows){
-  const board = emptyBoard();
-  for(let r=0;r<8;r++){
-    const rowStr = rows[r];
-    const rank = 7-r;
-    let file=0;
-    for(const ch of rowStr.split(' ')){
-      if(ch==='') continue;
-      if(!isNaN(parseInt(ch))){ file+=parseInt(ch); continue; }
-      if(ch==='.'){file+=1;continue;}
-      const color = ch===ch.toUpperCase()?'w':'b';
-      const type = ch.toUpperCase();
-      board[sq(file,rank)] = {color,type};
-      file+=1;
-    }
-  }
-  return board;
-}
-
-function initialBoard(){
-  return parseRows([
-    "r n b q k b n r","p p p p p p p p",". . . . . . . .",". . . . . . . .",
-    ". . . . . . . .",". . . . . . . .","P P P P P P P P","R N B Q K B N R"
-  ]);
-}
-
-const DIRS = { B:[[1,1],[1,-1],[-1,1],[-1,-1]], R:[[1,0],[-1,0],[0,1],[0,-1]],
-  Q:[[1,1],[1,-1],[-1,1],[-1,-1],[1,0],[-1,0],[0,1],[0,-1]] };
-const KNIGHT_D = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
-const KING_D = [[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
-
-function initState(board, turn, castling, ep){
-  return {board:board.slice(), turn, castling:Object.assign({wK:true,wQ:true,bK:true,bQ:true},castling||{}), ep: ep===undefined?-1:ep};
-}
-function cloneState(state){
-  return {board: state.board.slice(), turn: state.turn, castling: Object.assign({},state.castling), ep: state.ep};
-}
 
 function pseudoMoves(state, idx){
   const p = state.board[idx];
