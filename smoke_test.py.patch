@@ -1,0 +1,18 @@
+--- ChestQuest-latest/smoke_test.py	2026-09-10 18:31:21.000000000 +0000
++++ ChestQuest-testbranch/smoke_test.py	2026-09-20 18:52:31.791496834 +0000
+@@ -23,6 +23,7 @@
+     "index.html",
+     "style.css",
+     "app.js",
++    "chess-core.js",
+     "auth.js",
+     "supabase-config.js",
+     "setup.sql",
+@@ -46,6 +47,7 @@
+     expected = [
+         "style.css",
+         "app.js",
++        "chess-core.js",
+         "auth.js",
+         "supabase-config.js",
+         "logo.png",

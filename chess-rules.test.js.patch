@@ -1,0 +1,14 @@
+--- ChestQuest-main/tests/chess-rules.test.js	2026-09-12 11:28:25.165583394 +0000
++++ ChestQuest-testbranch/tests/chess-rules.test.js	2026-09-20 18:52:24.544246169 +0000
+@@ -31,8 +31,9 @@
+ }
+ 
+ function loadChessEngine() {
+-  const scriptPath = path.join(__dirname, '..', 'app.js');
+-  const source = fs.readFileSync(scriptPath, 'utf8');
++  const coreSource = fs.readFileSync(path.join(__dirname, '..', 'chess-core.js'), 'utf8');
++  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
++  const source = `${coreSource}\n${appSource}`;
+ 
+   const document = {
+     getElementById() { return makeElement(); },
