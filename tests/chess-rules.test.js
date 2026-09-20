@@ -32,8 +32,9 @@ function makeElement() {
 
 function loadChessEngine() {
   const coreSource = fs.readFileSync(path.join(__dirname, '..', 'chess-core.js'), 'utf8');
+  const rulesSource = fs.readFileSync(path.join(__dirname, '..', 'chess-rules.js'), 'utf8');
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
-  const source = `${coreSource}\n${appSource}`;
+  const source = `${coreSource}\n${rulesSource}\n${appSource}`;
 
   const document = {
     getElementById() { return makeElement(); },
@@ -94,7 +95,9 @@ const {
   kingIndex,
   inCheck,
   applyMove,
+  isAttacked,
   sq,
+  fileOf,
   parseRows,
 } = engine;
 
@@ -226,4 +229,87 @@ test('a king in check is reported correctly', () => {
   ]);
   const state = initState(board, 'w');
   assert.equal(inCheck(state, 'w'), false);
+});
+
+test('a pinned rook cannot move off the file that shields its king', () => {
+  // White king e1, white rook e2, black rook e8: the white rook is pinned
+  // and may only move along the e-file (or capture the pinning rook).
+  const board = parseRows([
+    '. . . . r . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . R . . .',
+    '. . . . K . . .'
+  ]);
+  const state = initState(board, 'w');
+  const rookMoves = legalMoves(state, 'w').filter(m => m.from === sq(4, 1));
+  assert.ok(rookMoves.length > 0);
+  assert.ok(rookMoves.every(m => fileOf(m.to) === 4));
+});
+
+test('the en-passant target resets after an unrelated move', () => {
+  const board = parseRows([
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . K . . .'
+  ]);
+  const state = initState(board, 'w', {}, sq(4, 3));
+  const quietMove = { from: sq(4, 0), to: sq(4, 1), flags: {} };
+  const after = applyMove(state, quietMove);
+  assert.equal(after.ep, -1);
+});
+
+test('queenside castling is legal and moves both king and rook', () => {
+  const board = parseRows([
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    'R . . . K . . .'
+  ]);
+  const state = initState(board, 'w', { wK: true, wQ: true, bK: true, bQ: true }, -1);
+  const castleMove = legalMoves(state, 'w').find(m => m.flags.castle === 'Q');
+  assert.ok(castleMove);
+  const after = applyMove(state, castleMove);
+  assert.equal(after.board[sq(2, 0)].type, 'K');
+  assert.equal(after.board[sq(3, 0)].type, 'R');
+  assert.equal(after.board[sq(0, 0)], null);
+  assert.equal(after.board[sq(4, 0)], null);
+});
+
+test('isAttacked ignores a sliding attacker blocked by an intervening piece', () => {
+  const blocked = parseRows([
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    'r P . K . . . .'
+  ]);
+  assert.equal(isAttacked(blocked, sq(3, 0), 'b'), false);
+
+  const clear = parseRows([
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    'r . . K . . . .'
+  ]);
+  assert.equal(isAttacked(clear, sq(3, 0), 'b'), true);
 });
