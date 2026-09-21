@@ -43,9 +43,50 @@ const DIRS = { B:[[1,1],[1,-1],[-1,1],[-1,-1]], R:[[1,0],[-1,0],[0,1],[0,-1]],
 const KNIGHT_D = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
 const KING_D = [[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
 
-function initState(board, turn, castling, ep){
-  return {board:board.slice(), turn, castling:Object.assign({wK:true,wQ:true,bK:true,bQ:true},castling||{}), ep: ep===undefined?-1:ep};
+/* ============================================================
+   ÉTAT DE PARTIE — forme canonique
+   {
+     board,          // Array(64) des cases (voir emptyBoard/parseRows)
+     turn,           // 'w' | 'b' — joueur actif
+     castling,       // {wK,wQ,bK,bQ} — droits de roque restants
+     ep,             // case cible de prise en passant, ou -1
+     halfmoveClock,  // demi-coups depuis le dernier coup de pion ou la
+                      // dernière capture (règle des 50 coups)
+     fullmoveNumber, // numéro du coup complet, incrémenté après le trait des Noirs
+     history,        // liste d'entrées de coups ; voir chess-history.js pour le
+                      // format des entrées (compatible avec moveHistory/rawMoveLog
+                      // dans app.js). Non peuplé automatiquement par applyMove —
+                      // voir le commentaire en tête de chess-history.js.
+     result          // résultat une fois la partie terminée, sinon null ;
+                      // voir chess-history.js:createGameSaveRecord pour le format
+                      // de sauvegarde utilisé par l'application aujourd'hui.
+   }
+   Certains états sont encore construits à la main ailleurs dans
+   l'application (ex. reconstruction d'une partie en ligne depuis le
+   serveur) sans ces quatre derniers champs : initState/cloneState leur
+   donnent toujours une valeur par défaut sûre plutôt que de planter.
+   ============================================================ */
+function initState(board, turn, castling, ep, halfmoveClock, fullmoveNumber, history, result){
+  return {
+    board: board.slice(),
+    turn,
+    castling: Object.assign({wK:true,wQ:true,bK:true,bQ:true},castling||{}),
+    ep: ep===undefined?-1:ep,
+    halfmoveClock: halfmoveClock===undefined?0:halfmoveClock,
+    fullmoveNumber: fullmoveNumber===undefined?1:fullmoveNumber,
+    history: history===undefined?[]:history,
+    result: result===undefined?null:result
+  };
 }
 function cloneState(state){
-  return {board: state.board.slice(), turn: state.turn, castling: Object.assign({},state.castling), ep: state.ep};
+  return {
+    board: state.board.slice(),
+    turn: state.turn,
+    castling: Object.assign({},state.castling),
+    ep: state.ep,
+    halfmoveClock: state.halfmoveClock===undefined?0:state.halfmoveClock,
+    fullmoveNumber: state.fullmoveNumber===undefined?1:state.fullmoveNumber,
+    history: state.history?state.history.slice():[],
+    result: state.result===undefined?null:state.result
+  };
 }

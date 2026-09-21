@@ -152,6 +152,11 @@ function applyMove(state, move, promoType){
     if(idx===sq(7,7)) s.castling.bK=false;
   };
   clearRook(move.from); clearRook(move.to);
+  // Demi-coups : remis à 0 sur coup de pion ou capture (règle des 50 coups),
+  // sinon incrémenté. Numéro de coup complet : incrémenté après le trait des Noirs.
+  const resetHalfmove = moving.type==='P' || !!move.flags.capture;
+  s.halfmoveClock = resetHalfmove ? 0 : (state.halfmoveClock||0)+1;
+  s.fullmoveNumber = state.turn==='b' ? (state.fullmoveNumber||1)+1 : (state.fullmoveNumber||1);
   s.turn = state.turn==='w'?'b':'w';
   return s;
 }

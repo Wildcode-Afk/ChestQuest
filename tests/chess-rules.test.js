@@ -33,8 +33,9 @@ function makeElement() {
 function loadChessEngine() {
   const coreSource = fs.readFileSync(path.join(__dirname, '..', 'chess-core.js'), 'utf8');
   const rulesSource = fs.readFileSync(path.join(__dirname, '..', 'chess-rules.js'), 'utf8');
+  const historySource = fs.readFileSync(path.join(__dirname, '..', 'chess-history.js'), 'utf8');
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
-  const source = `${coreSource}\n${rulesSource}\n${appSource}`;
+  const source = `${coreSource}\n${rulesSource}\n${historySource}\n${appSource}`;
 
   const document = {
     getElementById() { return makeElement(); },
@@ -99,6 +100,9 @@ const {
   sq,
   fileOf,
   parseRows,
+  moveNotation,
+  createHistoryEntry,
+  createGameSaveRecord,
 } = engine;
 
 test('initial board exposes 20 legal moves for white', () => {
@@ -312,4 +316,93 @@ test('isAttacked ignores a sliding attacker blocked by an intervening piece', ()
     'r . . K . . . .'
   ]);
   assert.equal(isAttacked(clear, sq(3, 0), 'b'), true);
+});
+
+test('halfmove clock resets on a pawn move or a capture, increments otherwise', () => {
+  const board = parseRows([
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . n . . .',
+    '. . . . . . . .',
+    '. . . N K . . .'
+  ]);
+  const state = initState(board, 'w', {}, -1, 5, 1);
+  // Quiet knight move (to an empty square): clock increments.
+  const quietKnightMove = legalMoves(state, 'w').find(m => m.from === sq(3, 0) && m.to === sq(1, 1));
+  assert.ok(quietKnightMove);
+  assert.equal(applyMove(state, quietKnightMove).halfmoveClock, 6);
+  // Knight captures the black knight on e2 (a real knight-move away): clock resets.
+  const captureMove = legalMoves(state, 'w').find(m => m.from === sq(3, 0) && m.to === sq(4, 2));
+  assert.ok(captureMove);
+  assert.equal(applyMove(state, captureMove).halfmoveClock, 0);
+});
+
+test('fullmove number increments after Black moves, not after White', () => {
+  const state = initState(initialBoard(), 'w', {}, -1, 0, 1);
+  const whiteMove = legalMoves(state, 'w').find(m => m.from === sq(4, 1) && m.to === sq(4, 3));
+  const afterWhite = applyMove(state, whiteMove);
+  assert.equal(afterWhite.fullmoveNumber, 1);
+  const blackMove = legalMoves(afterWhite, 'b').find(m => m.from === sq(4, 6) && m.to === sq(4, 4));
+  const afterBlack = applyMove(afterWhite, blackMove);
+  assert.equal(afterBlack.fullmoveNumber, 2);
+});
+
+test('initState/cloneState default the new counters when omitted, for states built without them', () => {
+  // Mirrors how the app sometimes rebuilds a state by hand (e.g. restoring
+  // an online game from the server) without halfmoveClock/fullmoveNumber/
+  // history/result.
+  const handBuiltState = { board: initialBoard(), turn: 'w', castling: { wK: true, wQ: true, bK: true, bQ: true }, ep: -1 };
+  const move = legalMoves(handBuiltState, 'w').find(m => m.from === sq(4, 1) && m.to === sq(4, 3));
+  const after = applyMove(handBuiltState, move);
+  assert.equal(after.halfmoveClock, 0);
+  assert.equal(after.fullmoveNumber, 1);
+  assert.equal(after.history.length, 0);
+  assert.equal(after.result, null);
+});
+
+test('moveNotation produces standard algebraic notation for ordinary moves, captures and promotions', () => {
+  const board = parseRows([
+    '. . . . . . . .',
+    '. . . . . P . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .',
+    '. . . . . . . .'
+  ]);
+  const state = initState(board, 'w');
+  const quiet = { from: sq(5, 6), to: sq(5, 7), flags: { promotion: true } };
+  assert.equal(moveNotation(state, quiet, null, 'Q'), 'f8=Q');
+
+  const knightBoard = parseRows([
+    '. . . . . . . .','. . . . . . . .','. . . . . . . .','. . . . . . . .',
+    '. . . . . . . .','. . . . . . . .','. . . . . . . .','. . . N . . . .'
+  ]);
+  const knightState = initState(knightBoard, 'w');
+  const capture = { from: sq(3, 0), to: sq(4, 2), flags: { capture: true } };
+  assert.equal(moveNotation(knightState, capture, { color: 'b', type: 'P' }, null), 'Nxe3');
+
+  assert.equal(moveNotation(knightState, { from: sq(4,0), to: sq(6,0), flags: { castle: 'K' } }, null, null), 'O-O');
+});
+
+test('createHistoryEntry and createGameSaveRecord match the shapes already used for display and save', () => {
+  const entry = createHistoryEntry('w', 'e4');
+  assert.equal(entry.color, 'w');
+  assert.equal(entry.note, 'e4');
+
+  const record = createGameSaveRecord({ mode: 'practice', result: 'win', aiElo: 800, moves: [{ from: 1, to: 2, promo: 'Q', color: 'w' }], playerColor: 'w' });
+  assert.equal(record.mode, 'practice');
+  assert.equal(record.result, 'win');
+  assert.equal(record.ai_elo, 800);
+  assert.equal(record.player_color, 'w');
+  assert.equal(record.moves.length, 1);
+  assert.equal(record.moves[0].from, 1);
+  assert.equal('coach_stats' in record, false);
+
+  const coachRecord = createGameSaveRecord({ mode: 'coach', result: 'loss', aiElo: 1200, moves: [], playerColor: 'b', coachStats: { excellent: 1 } });
+  assert.equal(coachRecord.coach_stats.excellent, 1);
 });

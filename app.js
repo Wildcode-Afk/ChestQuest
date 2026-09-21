@@ -88,18 +88,8 @@ function chooseAIMoveMinimax(state, depth){
   }
   return best;
 }
-function moveNotation(preState, mv, capturedPiece, promo){
-  if(mv.flags.castle==='K') return 'O-O';
-  if(mv.flags.castle==='Q') return 'O-O-O';
-  const mover = preState.board[mv.from];
-  let str = mover.type==='P' ? '' : mover.type;
-  const isCap = !!capturedPiece;
-  if(mover.type==='P' && isCap) str += 'abcdefgh'[fileOf(mv.from)];
-  if(isCap) str += 'x';
-  str += sqName(mv.to);
-  if(mv.flags.promotion) str += '='+(promo||'Q');
-  return str;
-}
+// moveNotation, createHistoryEntry, createGameSaveRecord : voir chess-history.js
+
 
 /* ============================================================
    DONNÉES : LEÇONS
@@ -2388,7 +2378,7 @@ function finalizeMove(mv, promo){
       let note = moveNotation(preState, mv, capturedPiece, promo);
       if(st==='checkmate') note+='#'; else if(st==='check') note+='+';
       if(moveQuality) note += ' ' + MOVE_QUALITY_TAG[moveQuality];
-      moveHistory.push({color:moverColor, note});
+      moveHistory.push(createHistoryEntry(moverColor, note));
       rawMoveLog.push({from:mv.from, to:mv.to, promo:promo||'Q', color:moverColor});
       if(mode==='practice'||mode==='coach') pushLiveGameUpdate();
       renderMoves();
@@ -2647,7 +2637,7 @@ function triggerAIMove(){
       const st2 = gameStatus(gameState);
       let note = moveNotation(preState, mv, capturedPiece, 'Q');
       if(st2==='checkmate') note+='#'; else if(st2==='check') note+='+';
-      moveHistory.push({color:preState.turn, note});
+      moveHistory.push(createHistoryEntry(preState.turn, note));
       rawMoveLog.push({from:mv.from, to:mv.to, promo:'Q', color:preState.turn});
       pushLiveGameUpdate();
       renderMoves();
@@ -2699,8 +2689,10 @@ function onGameEnd(result, reason){
   else if(result==='loss') lossesCount++;
   else drawsCount++;
   if(window.ChessSocial && window.ChessAuth && window.ChessAuth.getUser() && (mode==='practice'||mode==='coach')){
-    const historyEntry = { mode, result, ai_elo: aiEloAtGameTime, moves: rawMoveLog.slice(), player_color: playerColor };
-    if(mode==='coach') historyEntry.coach_stats = coachStats;
+    const historyEntry = createGameSaveRecord({
+      mode, result, aiElo: aiEloAtGameTime, moves: rawMoveLog.slice(), playerColor,
+      coachStats: mode==='coach' ? coachStats : undefined
+    });
     window.ChessSocial.saveGameHistory(historyEntry);
   }
   queueSaveProgress();
@@ -3210,7 +3202,7 @@ function applyRemoteOnlineMove(newRow){
   const status = gameStatus(gameState);
   let note = mv ? moveNotation(preState, mv, capturedPiece, newRow.last_promo||'Q') : (sqName(newRow.last_from)+'-'+sqName(newRow.last_to));
   if(status==='checkmate') note+='#'; else if(status==='check') note+='+';
-  moveHistory.push({ color: onlineRole==='w'?'b':'w', note });
+  moveHistory.push(createHistoryEntry(onlineRole==='w'?'b':'w', note));
   rawMoveLog.push({ from:newRow.last_from, to:newRow.last_to, promo:newRow.last_promo||'Q', color:onlineRole==='w'?'b':'w' });
   renderMoves();
 
