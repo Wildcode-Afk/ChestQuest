@@ -1755,6 +1755,7 @@ if(profileDeleteBtnEl) profileDeleteBtnEl.addEventListener('click', handleDelete
 function currentAIElo(){ return aiMode==='progressive' ? progressiveElo : fixedElo; }
 
 const boardEl = document.getElementById('board');
+initBoardView(boardEl);
 const listInner = document.getElementById('listInner');
 const listHead = document.getElementById('listHead');
 const lessonTitle = document.getElementById('lessonTitle');
@@ -1976,57 +1977,8 @@ function renderList(){
 }
 
 /* ---------- Board rendering ---------- */
-const SVGNS = 'http://www.w3.org/2000/svg';
-function pieceGlyph(p){ return '#pc-'+p.type; }
-function createPieceEl(piece){
-  const svg = document.createElementNS(SVGNS,'svg');
-  svg.setAttribute('viewBox','0 0 100 100');
-  svg.setAttribute('class', 'piece ' + (piece.color==='w'?'white':'black'));
-  const use = document.createElementNS(SVGNS,'use');
-  use.setAttributeNS('http://www.w3.org/1999/xlink','href','#pc-'+piece.type);
-  use.setAttribute('href','#pc-'+piece.type);
-  svg.appendChild(use);
-  return svg;
-}
-
-function computeSquareSize(){
-  const chrome = 76;
-  const avail = Math.min(window.innerWidth - chrome, 520);
-  return Math.max(30, Math.min(46, Math.floor(avail/8)));
-}
-
-function animatePieceMove(fromIdx, toIdx, piece, onDone){
-  const fromCell = boardEl.querySelector('[data-idx="'+fromIdx+'"]');
-  const toCell = boardEl.querySelector('[data-idx="'+toIdx+'"]');
-  if(!fromCell || !toCell){ onDone(); return; }
-  const boardRect = boardEl.getBoundingClientRect();
-  const fromRect = fromCell.getBoundingClientRect();
-  const toRect = toCell.getBoundingClientRect();
-
-  const originalPieceEl = fromCell.querySelector('.piece');
-  if(originalPieceEl) originalPieceEl.style.visibility='hidden';
-  const destPieceEl = toCell.querySelector('.piece');
-  if(destPieceEl) destPieceEl.style.visibility='hidden';
-
-  const ghost = createPieceEl(piece);
-  ghost.classList.add('ghost');
-  ghost.style.position = 'absolute';
-  ghost.style.left = (fromRect.left - boardRect.left) + 'px';
-  ghost.style.top = (fromRect.top - boardRect.top) + 'px';
-  ghost.style.width = fromRect.width+'px';
-  ghost.style.height = fromRect.height+'px';
-  boardEl.appendChild(ghost);
-
-  requestAnimationFrame(()=>{
-    ghost.style.transition = 'left .28s cubic-bezier(.4,0,.2,1), top .28s cubic-bezier(.4,0,.2,1)';
-    ghost.style.left = (toRect.left - boardRect.left) + 'px';
-    ghost.style.top = (toRect.top - boardRect.top) + 'px';
-  });
-  setTimeout(()=>{
-    ghost.remove();
-    onDone();
-  }, 290);
-}
+// SVGNS, pieceGlyph, createPieceEl, computeSquareSize, animatePieceMove,
+// squareColorClass, renderBoardSquares : voir chess-board-view.js
 
 let thinkingInterval = null;
 function startThinkingIndicator(){
@@ -2045,62 +1997,15 @@ function stopThinkingIndicator(){
   if(av) av.classList.remove('thinking');
 }
 
-function squareColorClass(idx){
-  const f=fileOf(idx), r=rankOf(idx);
-  return ((f+r)%2===0) ? 'dark' : 'light';
-}
-
 function render(){
   if(mode==='puzzles' && puzzleSubMode==='solitaire'){ renderSolitaire(); return; }
   if(!gameState) return;
-  boardEl.innerHTML='';
-  boardEl.style.setProperty('--sq', computeSquareSize()+'px');
-  const ranks = boardFlipped ? [0,1,2,3,4,5,6,7] : [7,6,5,4,3,2,1,0];
-  const files = boardFlipped ? [7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7];
-  for(const rank of ranks){
-    for(const file of files){
-      const idx = sq(file,rank);
-      const cell = document.createElement('div');
-      cell.className = 'sq ' + squareColorClass(idx);
-      cell.dataset.idx = idx;
-      if(lastMove && (idx===lastMove.from || idx===lastMove.to)) cell.classList.add('lastmove');
-      if(selected===idx) cell.classList.add('origin');
-
-      if(file===files[0]){
-        const c = document.createElement('span'); c.className='coord'; c.textContent = rank+1; cell.appendChild(c);
-      }
-
-      const teachSquare = (mode==='lessons') ? LESSONS[lessonIdx].focusSquare : null;
-      if(teachSquare && sqName(idx)===teachSquare && !lessonGoalMet){
-        cell.classList.add('teach');
-      }
-
-      const piece = gameState.board[idx];
-      if(piece){
-        const span = createPieceEl(piece);
-        if(selected===idx) span.classList.add('selected');
-        cell.appendChild(span);
-      }
-
-      // king in check highlight
-      if(piece && piece.type==='K'){
-        const st = inCheck(gameState, piece.color);
-        if(st) cell.classList.add('kingdanger');
-      }
-
-      const mv = legalTargets.find(m=>m.to===idx);
-      if(mv){
-        if(gameState.board[idx] || mv.flags.enpassant){
-          const ring = document.createElement('div'); ring.className='ring'; cell.appendChild(ring);
-        } else {
-          const dot = document.createElement('div'); dot.className='dot'; cell.appendChild(dot);
-        }
-      }
-
-      cell.onclick = ()=>onSquareClick(idx);
-      boardEl.appendChild(cell);
-    }
-  }
+  const teachSquare = (mode==='lessons') ? LESSONS[lessonIdx].focusSquare : null;
+  const kingInCheck = { w: inCheck(gameState,'w'), b: inCheck(gameState,'b') };
+  renderBoardSquares({
+    board: gameState.board, selected, lastMove, legalTargets, boardFlipped,
+    teachSquare, lessonGoalMet, kingInCheck, onSquareClick
+  });
 
   // captured strip
   const capIcon = (type,colorClass)=>`<svg class="piece ${colorClass} cap-icon" viewBox="0 0 100 100"><use href="#pc-${type}"/></svg>`;

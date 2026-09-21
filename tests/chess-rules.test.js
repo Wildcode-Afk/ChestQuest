@@ -35,8 +35,9 @@ function loadChessEngine() {
   const rulesSource = fs.readFileSync(path.join(__dirname, '..', 'chess-rules.js'), 'utf8');
   const historySource = fs.readFileSync(path.join(__dirname, '..', 'chess-history.js'), 'utf8');
   const aiSource = fs.readFileSync(path.join(__dirname, '..', 'chess-ai.js'), 'utf8');
+  const boardViewSource = fs.readFileSync(path.join(__dirname, '..', 'chess-board-view.js'), 'utf8');
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
-  const source = `${coreSource}\n${rulesSource}\n${historySource}\n${aiSource}\n${appSource}`;
+  const source = `${coreSource}\n${rulesSource}\n${historySource}\n${aiSource}\n${boardViewSource}\n${appSource}`;
 
   const document = {
     getElementById() { return makeElement(); },
