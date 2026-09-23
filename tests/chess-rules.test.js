@@ -36,8 +36,16 @@ function loadChessEngine() {
   const historySource = fs.readFileSync(path.join(__dirname, '..', 'chess-history.js'), 'utf8');
   const aiSource = fs.readFileSync(path.join(__dirname, '..', 'chess-ai.js'), 'utf8');
   const boardViewSource = fs.readFileSync(path.join(__dirname, '..', 'chess-board-view.js'), 'utf8');
+  const preferencesSource = fs.readFileSync(path.join(__dirname, '..', 'chess-preferences.js'), 'utf8');
+  const soundSource = fs.readFileSync(path.join(__dirname, '..', 'chess-sound.js'), 'utf8');
+  const feedbackSource = fs.readFileSync(path.join(__dirname, '..', 'chess-feedback.js'), 'utf8');
+  const messagesSource = fs.readFileSync(path.join(__dirname, '..', 'chess-messages.js'), 'utf8');
+  const modalSource = fs.readFileSync(path.join(__dirname, '..', 'chess-modal.js'), 'utf8');
+  const clockSource = fs.readFileSync(path.join(__dirname, '..', 'chess-clock.js'), 'utf8');
+  const modesSource = fs.readFileSync(path.join(__dirname, '..', 'chess-modes.js'), 'utf8');
+  const solitaireSource = fs.readFileSync(path.join(__dirname, '..', 'chess-mode-solitaire.js'), 'utf8');
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
-  const source = `${coreSource}\n${rulesSource}\n${historySource}\n${aiSource}\n${boardViewSource}\n${appSource}`;
+  const source = `${coreSource}\n${rulesSource}\n${historySource}\n${aiSource}\n${boardViewSource}\n${preferencesSource}\n${soundSource}\n${feedbackSource}\n${messagesSource}\n${modalSource}\n${clockSource}\n${modesSource}\n${solitaireSource}\n${appSource}`;
 
   const document = {
     getElementById() { return makeElement(); },

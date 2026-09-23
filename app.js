@@ -600,71 +600,9 @@ const PUZZLES = [
 /* ============================================================
    ÉTAT DE L'APPLICATION
    ============================================================ */
-/* ---------- Sons ---------- */
-let audioCtx = null;
-let soundsEnabled = (localStorage.getItem('chessSoundsEnabled') !== '0');
-function getAudioCtx(){
-  if(!audioCtx){
-    try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    catch(e){ return null; }
-  }
-  if(audioCtx.state==='suspended') audioCtx.resume();
-  return audioCtx;
-}
-function playTone(freq, duration, type, startOffset, gainPeak){
-  const ctx = getAudioCtx();
-  if(!ctx) return;
-  const t0 = ctx.currentTime + (startOffset||0);
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = type || 'sine';
-  osc.frequency.setValueAtTime(freq, t0);
-  gain.gain.setValueAtTime(0, t0);
-  gain.gain.linearRampToValueAtTime(gainPeak!=null?gainPeak:0.15, t0+0.01);
-  gain.gain.exponentialRampToValueAtTime(0.0001, t0+duration);
-  osc.connect(gain).connect(ctx.destination);
-  osc.start(t0);
-  osc.stop(t0+duration+0.03);
-}
-function playSound(kind){
-  if(!soundsEnabled) return;
-  switch(kind){
-    case 'move': playTone(520, 0.09, 'sine'); break;
-    case 'capture': playTone(210, 0.13, 'square', 0, 0.1); break;
-    case 'check': playTone(740, 0.09, 'triangle'); playTone(880, 0.12, 'triangle', 0.09); break;
-    case 'win': playTone(523, 0.12, 'sine'); playTone(659, 0.12, 'sine', 0.12); playTone(784, 0.2, 'sine', 0.24); break;
-    case 'loss': playTone(392, 0.16, 'sine', 0, 0.12); playTone(311, 0.24, 'sine', 0.15, 0.12); break;
-    case 'draw': playTone(440, 0.13, 'sine', 0, 0.1); playTone(440, 0.13, 'sine', 0.16, 0.1); break;
-    case 'click': playTone(660, 0.05, 'sine', 0, 0.08); break;
-  }
-}
-function toggleSounds(){
-  soundsEnabled = !soundsEnabled;
-  localStorage.setItem('chessSoundsEnabled', soundsEnabled ? '1' : '0');
-  updateSoundToggleUI();
-  if(soundsEnabled) playSound('move');
-}
-function updateSoundToggleUI(){
-  const btn = document.getElementById('soundToggleBtn');
-  if(btn) btn.textContent = soundsEnabled ? '🔊' : '🔇';
-}
-const soundToggleBtnEl = document.getElementById('soundToggleBtn');
-if(soundToggleBtnEl){ soundToggleBtnEl.addEventListener('click', toggleSounds); updateSoundToggleUI(); }
-
-/* ---------- Animations de fin de coup ---------- */
-function flashBoard(kind){
-  const frame = document.querySelector('.board-frame');
-  if(!frame) return;
-  frame.classList.remove('flash-check','flash-mate');
-  void frame.offsetWidth; // relance l'animation même si la classe était déjà présente
-  frame.classList.add(kind==='mate' ? 'flash-mate' : 'flash-check');
-  setTimeout(()=>frame.classList.remove('flash-check','flash-mate'), 650);
-}
-function playMoveFeedback(status, capturedPiece){
-  if(status==='checkmate'){ flashBoard('mate'); return; }
-  if(status==='check'){ flashBoard('check'); playSound('check'); return; }
-  playSound(capturedPiece ? 'capture' : 'move');
-}
+// Sons (audioCtx, playTone, playSound, toggleSounds, updateSoundToggleUI) : voir chess-sound.js
+// Préférence son persistée : voir chess-preferences.js
+// Animations de fin de coup (flashBoard, playMoveFeedback) : voir chess-feedback.js
 
 let mode = 'home';
 let lessonIdx = 0;
@@ -705,52 +643,8 @@ let solitaireLegalTargets = [];
 let solitaireMoveCount = 0;
 let solitaireSolved = false;
 
-function isSolitaireUnlocked(i){
-  if(i===0) return true;
-  const P = SOLITAIRE_PUZZLES[i], prev = SOLITAIRE_PUZZLES[i-1];
-  if(prev.category !== P.category) return true;
-  return solvedSolitaire.has(i-1);
-}
-
-/* ---------- Génération de coups (capture uniquement, toute pièce est cible valide) ---------- */
-function solitaireMovesFrom(board, idx){
-  const p = board[idx];
-  if(!p) return [];
-  const f = fileOf(idx), r = rankOf(idx);
-  const moves = [];
-  if(p.type==='P'){
-    for(const df of [-1,1]){
-      const nf=f+df, nr=r+1;
-      if(!inBoard(nf,nr)) continue;
-      const t = sq(nf,nr);
-      if(board[t]) moves.push({from:idx, to:t, flags:{}});
-    }
-  } else if(p.type==='N' || p.type==='K'){
-    const offs = p.type==='N' ? KNIGHT_D : KING_D;
-    for(const [df,dr] of offs){
-      const nf=f+df, nr=r+dr;
-      if(!inBoard(nf,nr)) continue;
-      const t = sq(nf,nr);
-      if(board[t]) moves.push({from:idx, to:t, flags:{}});
-    }
-  } else {
-    for(const [df,dr] of DIRS[p.type]){
-      let nf=f+df, nr=r+dr;
-      while(inBoard(nf,nr)){
-        const t = sq(nf,nr);
-        if(board[t]){ moves.push({from:idx, to:t, flags:{}}); break; }
-        nf+=df; nr+=dr;
-      }
-    }
-  }
-  return moves;
-}
-function solitaireAllMoves(board){
-  const moves = [];
-  for(let i=0;i<64;i++){ if(board[i]) moves.push(...solitaireMovesFrom(board,i)); }
-  return moves;
-}
-function solitairePieceCount(board){ return board.filter(Boolean).length; }
+// isSolitaireUnlocked, solitaireMovesFrom, solitaireAllMoves, solitairePieceCount,
+// loadSolitaire, solitaireOnSquareClick : voir chess-mode-solitaire.js
 
 function updateSubmodeButtons(){
   const mateBtn = document.getElementById('submodeMateBtn');
@@ -771,70 +665,6 @@ if(puzzleSubmodeRowEl){
   });
 }
 
-function loadSolitaire(i){
-  if(!isSolitaireUnlocked(i)){
-    i = 0;
-    for(let k=SOLITAIRE_PUZZLES.length-1;k>=0;k--){ if(isSolitaireUnlocked(k)){ i=k; break; } }
-  }
-  solitaireIdx = i;
-  const P = SOLITAIRE_PUZZLES[i];
-  solitaireBoard = parseRows(P.rows);
-  solitaireSelected = null;
-  solitaireLegalTargets = [];
-  solitaireMoveCount = 0;
-  solitaireSolved = false;
-  lessonTitle.textContent = P.title;
-  lessonDesc.textContent = P.desc;
-  setCoach("Choisis la pièce qui doit capturer en premier. Réfléchis bien avant de jouer. Besoin d'un coup de pouce ? Clique sur « Indice ».");
-  renderControls();
-  renderList();
-  render();
-}
-
-function solitaireOnSquareClick(idx){
-  const piece = solitaireBoard[idx];
-  // clic sur une case cible en surbrillance : jouer le coup
-  const mv = solitaireLegalTargets.find(m=>m.to===idx);
-  if(mv){
-    solitaireBoard[mv.to] = solitaireBoard[mv.from];
-    solitaireBoard[mv.from] = null;
-    solitaireMoveCount++;
-    solitaireSelected = null;
-    solitaireLegalTargets = [];
-    const remaining = solitairePieceCount(solitaireBoard);
-    render();
-    if(remaining===1){
-      solitaireSolved = true;
-      solvedSolitaire.add(solitaireIdx);
-      queueSaveProgress();
-      setCoach("🏆 Bravo ! Il ne reste qu'une seule pièce — puzzle résolu !");
-      playSound('win');
-      renderControls();
-      renderList();
-    } else {
-      const nextMoves = solitaireAllMoves(solitaireBoard);
-      if(nextMoves.length===0){
-        setCoach("😕 Plus aucune capture possible et il reste "+remaining+" pièces sur l'échiquier. Clique sur « Recommencer » pour réessayer.");
-        renderControls();
-      } else {
-        setCoach("Coup joué ! Encore "+(remaining-1)+" capture(s) à trouver.");
-      }
-    }
-    return;
-  }
-  // sélection d'une nouvelle pièce
-  if(piece){
-    solitaireSelected = idx;
-    solitaireLegalTargets = solitaireMovesFrom(solitaireBoard, idx);
-    if(solitaireLegalTargets.length===0){
-      setCoach("Cette pièce ne peut capturer aucune autre pièce depuis sa position actuelle.");
-    }
-  } else {
-    solitaireSelected = null;
-    solitaireLegalTargets = [];
-  }
-  render();
-}
 
 let gameState = null;   // {board, turn, castling, ep}
 let selected = null;    // index of selected square
@@ -907,55 +737,9 @@ let currentTimeControl = null;
 let clocks = { w:null, b:null };
 let clockTimerId = null;
 
-function stopClockTimer(){
-  if(clockTimerId){ clearInterval(clockTimerId); clockTimerId = null; }
-}
-function startClockTimer(){
-  stopClockTimer();
-  clockTimerId = setInterval(()=>{
-    if(!clockActive || !gameState) return;
-    const side = gameState.turn;
-    clocks[side] = Math.max(0, (clocks[side]||0) - 1);
-    renderClocks();
-    if(clocks[side]<=0){
-      stopClockTimer();
-      const winnerColor = side==='w' ? 'b' : 'w';
-      onGameEnd(winnerColor===playerColor ? 'win' : 'loss', 'timeout');
-    }
-  }, 1000);
-}
-function applyClockForMove(moverColor){
-  if(!clockActive || !currentTimeControl) return;
-  if(currentTimeControl.perMove != null){
-    clocks[moverColor] = currentTimeControl.perMove;
-  } else if(currentTimeControl.inc){
-    clocks[moverColor] = (clocks[moverColor]||0) + currentTimeControl.inc;
-  }
-  renderClocks();
-}
-function formatClockTime(sec){
-  if(sec==null) return '--:--';
-  if(sec>=86400){
-    const d = Math.floor(sec/86400), h = Math.floor((sec%86400)/3600);
-    return d+'j '+String(h).padStart(2,'0')+'h';
-  }
-  const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
-  if(h>0) return h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-}
-function renderClocks(){
-  const row = document.getElementById('clocksRow');
-  if(!row) return;
-  if(!clockActive){ row.style.display = 'none'; return; }
-  row.style.display = 'flex';
-  const wt = document.getElementById('clockWhiteTime'), bt = document.getElementById('clockBlackTime');
-  const wc = document.getElementById('clockWhite'), bc = document.getElementById('clockBlack');
-  if(wt) wt.textContent = formatClockTime(clocks.w);
-  if(bt) bt.textContent = formatClockTime(clocks.b);
-  const turn = gameState ? gameState.turn : null;
-  if(wc){ wc.classList.toggle('active', turn==='w'); wc.classList.toggle('low', clocks.w!=null && clocks.w>0 && clocks.w<=20 && (currentTimeControl && currentTimeControl.perMove==null)); }
-  if(bc){ bc.classList.toggle('active', turn==='b'); bc.classList.toggle('low', clocks.b!=null && clocks.b>0 && clocks.b<=20 && (currentTimeControl && currentTimeControl.perMove==null)); }
-}
+// stopClockTimer, startClockTimer, applyClockForMove, formatClockTime,
+// renderClocks : voir chess-clock.js (ces 4 variables restent ici, voir
+// le commentaire en tête de chess-clock.js sur ce choix)
 
 /* ---------- Mode Entraîneur (analyse de coups) ---------- */
 let coachStats = {excellent:0, good:0, inaccuracy:0, mistake:0, blunder:0};
@@ -1659,7 +1443,7 @@ async function saveProfileUsername(){
 async function handleDeleteAccount(){
   const confirmBox = document.getElementById('profileDeleteConfirm');
   if(!confirmBox || !confirmBox.checked) return;
-  if(!confirm("Cette action est définitive : ton compte et toutes tes données (progression, historique, messages du chat) seront supprimés. Continuer ?")) return;
+  if(!confirmAction("Cette action est définitive : ton compte et toutes tes données (progression, historique, messages du chat) seront supprimés. Continuer ?")) return;
   const btn = document.getElementById('profileDeleteBtn');
   if(btn) btn.disabled = true;
   const ok = window.ChessAuth ? await window.ChessAuth.deleteAccount() : false;
@@ -1761,16 +1545,20 @@ const listHead = document.getElementById('listHead');
 const lessonTitle = document.getElementById('lessonTitle');
 const lessonDesc = document.getElementById('lessonDesc');
 const coachText = document.getElementById('coachText');
+initMessages(coachText);
 const controlsEl = document.getElementById('controls');
 const turnLabel = document.getElementById('turnLabel');
 const statusBadge = document.getElementById('statusBadge');
 const capWEl = document.getElementById('capturedByWhite');
 const capBEl = document.getElementById('capturedByBlack');
 const promoOverlay = document.getElementById('promoOverlay');
+initPromoModal(promoOverlay);
 
 /* Rendu des pièces : voir le sprite SVG <symbol id="pc-X"> défini en haut du <body>. */
 
-function setCoach(msg){ coachText.innerHTML = msg; }
+// setCoach : voir chess-messages.js
+// showPromoPicker, confirmAction : voir chess-modal.js
+
 
 /* ---------- Mode switching ---------- */
 function hideAllViews(){
@@ -2129,26 +1917,14 @@ function onSquareClick(idx){
 function doMove(mv){
   if(mv.flags.promotion){
     awaitingPromotion = mv;
-    showPromoPicker(gameState.board[mv.from].color);
+    showPromoPicker(gameState.board[mv.from].color, (pieceType)=>{
+      const m = awaitingPromotion;
+      awaitingPromotion = null;
+      finalizeMove(m, pieceType);
+    });
     return;
   }
   finalizeMove(mv, 'Q');
-}
-
-function showPromoPicker(color){
-  const opts = ['Q','R','B','N'];
-  const colorClass = color==='w'?'white':'black';
-  promoOverlay.innerHTML = `<div class="promo-overlay"><div class="promo-box">` +
-    opts.map(o=>`<button data-p="${o}"><svg class="piece ${colorClass}" viewBox="0 0 100 100"><use href="#pc-${o}"/></svg></button>`).join('') +
-    `</div></div>`;
-  promoOverlay.querySelectorAll('button').forEach(b=>{
-    b.onclick = ()=>{
-      const mv = awaitingPromotion;
-      awaitingPromotion = null;
-      promoOverlay.innerHTML='';
-      finalizeMove(mv, b.dataset.p);
-    };
-  });
 }
 
 function finalizeMove(mv, promo){
@@ -2581,7 +2357,7 @@ function renderControls(){
     const resignBtn = document.createElement('button'); resignBtn.className='btn danger'; resignBtn.textContent='🏳️ Abandonner';
     resignBtn.disabled = onlineFinished;
     resignBtn.onclick=()=>{
-      if(confirm("Abandonner la partie ? Ton adversaire sera déclaré vainqueur.")) resignOnlineGame();
+      if(confirmAction("Abandonner la partie ? Ton adversaire sera déclaré vainqueur.")) resignOnlineGame();
     };
     const leaveBtn = document.createElement('button'); leaveBtn.className='btn'; leaveBtn.textContent='← Quitter';
     leaveBtn.onclick=()=>goToMode('playmenu');
