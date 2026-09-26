@@ -2741,9 +2741,13 @@ function applyRemoteOnlineMove(newRow){
   if(mv){
     capturedPiece = preState.board[mv.to] || (mv.flags.enpassant ? {color: preState.turn==='w'?'b':'w', type:'P'} : null);
     gameState = applyMove(preState, mv, newRow.last_promo||'Q');
-  } else {
-    // désynchronisation : on fait confiance au plateau transmis par le serveur
+  } else if(isValidBoardArray(newRow.board)){
+    // désynchronisation : on fait confiance au plateau transmis par le serveur,
+    // après avoir vérifié qu'il a au moins la forme attendue par le moteur.
     gameState = { board:newRow.board, turn:newRow.turn, castling:{wK:true,wQ:true,bK:true,bQ:true}, ep:-1 };
+  } else {
+    console.warn('[en ligne] Coup distant introuvable et plateau transmis mal formé : mise à jour ignorée.');
+    return;
   }
   lastMove = { from:newRow.last_from, to:newRow.last_to };
   const status = gameStatus(gameState);
@@ -2768,6 +2772,11 @@ function applyRemoteOnlineMove(newRow){
 }
 
 function onOnlineGameUpdate(newRow){
+  const errors = validateOnlineGameRow(newRow);
+  if(errors.length){
+    console.warn('[en ligne] Ligne online_games mal formée reçue, ignorée :', errors.join(', '));
+    return;
+  }
   if(!onlineBoardInitialized){
     if(newRow.board){
       onlineBoardInitialized = true;
@@ -2785,7 +2794,7 @@ function onOnlineGameUpdate(newRow){
     }
     return;
   }
-  if(newRow.move_count > onlineMoveCount){
+  if(hasNewMove(newRow, onlineMoveCount)){
     onlineMoveCount = newRow.move_count;
     applyRemoteOnlineMove(newRow);
   }
