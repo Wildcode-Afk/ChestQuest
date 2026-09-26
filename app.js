@@ -817,43 +817,7 @@ function countryNameFor(code){
   return found ? found[1] : '';
 }
 
-function applyLoadedProgress(data){
-  if(!data) return;
-  completedLessons = new Set(data.completed_lessons || []);
-  solvedPuzzles = new Set(data.solved_puzzles || []);
-  solvedSolitaire = new Set(data.solved_solitaire || []);
-  if(typeof data.progressive_elo === 'number') progressiveElo = data.progressive_elo;
-  if(typeof data.fixed_elo === 'number') fixedElo = data.fixed_elo;
-  if(data.ai_mode) aiMode = data.ai_mode;
-  winsCount = data.wins_count || 0;
-  lossesCount = data.losses_count || 0;
-  drawsCount = data.draws_count || 0;
-  myCountry = data.country || null;
-  myFeaturedBadge = data.featured_badge || null;
-  showHome();
-  renderList();
-}
-
-let saveProgressTimer = null;
-function queueSaveProgress(){
-  if(!window.ChessAuth || !window.ChessAuth.getUser()) return;
-  clearTimeout(saveProgressTimer);
-  saveProgressTimer = setTimeout(()=>{
-    window.ChessProgress.save({
-      username: window.ChessAuth.displayName(),
-      completed_lessons: Array.from(completedLessons),
-      solved_puzzles: Array.from(solvedPuzzles),
-      solved_solitaire: Array.from(solvedSolitaire),
-      progressive_elo: progressiveElo,
-      fixed_elo: fixedElo,
-      ai_mode: aiMode,
-      wins_count: winsCount,
-      losses_count: lossesCount,
-      draws_count: drawsCount,
-      badges: earnedBadgeIds()
-    });
-  }, 600);
-}
+// applyLoadedProgress, queueSaveProgress, sanitizeProgressRow : voir chess-progress-service.js
 
 if(window.ChessAuth){
   window.ChessAuth.onChange(async (user)=>{
