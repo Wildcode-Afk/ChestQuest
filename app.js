@@ -607,18 +607,9 @@ const PUZZLES = [
 let mode = 'home';
 let lessonIdx = 0;
 let puzzleIdx = 0;
-function isPuzzleUnlocked(i){
-  if(i===0) return true;
-  const P = PUZZLES[i], prev = PUZZLES[i-1];
-  if(prev.category !== P.category) return true; // premier puzzle d'une nouvelle rubrique
-  return solvedPuzzles.has(i-1);
-}
-function isLessonUnlocked(i){
-  if(i===0) return true;
-  const L = LESSONS[i], prev = LESSONS[i-1];
-  if(prev.category !== L.category) return true; // première leçon d'une nouvelle rubrique
-  return completedLessons.has(prev.id);
-}
+// isPuzzleUnlocked, loadPuzzle, handlePuzzleMove : voir chess-puzzles.js
+// isLessonUnlocked, lessonsCompletedInCategory, lessonsTotalInCategory,
+// loadLesson, handleLessonMove : voir chess-lessons.js
 let completedLessons = new Set();
 let solvedPuzzles = new Set();
 let solvedSolitaire = new Set();
@@ -976,12 +967,7 @@ if(!document.getElementById('historyList').dataset.clickBound){
 }
 
 /* ---------- Accueil : badges ---------- */
-function lessonsCompletedInCategory(cat){
-  return LESSONS.filter(l=>l.category===cat && completedLessons.has(l.id)).length;
-}
-function lessonsTotalInCategory(cat){
-  return LESSONS.filter(l=>l.category===cat).length;
-}
+// lessonsCompletedInCategory, lessonsTotalInCategory : voir chess-lessons.js
 const BADGES = [
   {id:'elo1500', icon:'🚀', title:'Elo 1500', desc:'Atteins 1500 Elo en mode progressif.', earned:()=>progressiveElo>=1500},
   {id:'elo1000', icon:'📈', title:'Elo 1000', desc:'Atteins 1000 Elo en mode progressif.', earned:()=>progressiveElo>=1000},
@@ -1940,86 +1926,9 @@ function finalizeMove(mv, promo){
   });
 }
 
-/* ---------- Lessons logic ---------- */
-function loadLesson(i){
-  if(!isLessonUnlocked(i)){
-    i = 0;
-    for(let k=LESSONS.length-1;k>=0;k--){ if(isLessonUnlocked(k)){ i=k; break; } }
-    lessonIdx = i;
-  }
-  const L = LESSONS[i];
-  gameState = initState(parseRows(L.rows), L.turn||'w', {wK:true,wQ:true,bK:true,bQ:true});
-  selected=null; legalTargets=[]; lastMove=null; lessonGoalMet=false;
-  capturedByWhite=[]; capturedByBlack=[]; awaitingPromotion=null; moveHistory=[];
-  promoOverlay.innerHTML='';
-  renderMoves();
-  lessonTitle.textContent = L.title;
-  lessonDesc.textContent = L.desc;
-  setCoach(L.hint);
-  renderControls();
-  renderList();
-  render();
-}
+// loadLesson, handleLessonMove : voir chess-lessons.js
 
-function handleLessonMove(mv, moverColor, isCastle, capturedPiece){
-  const L = LESSONS[lessonIdx];
-  let met = false;
-  if(L.goal.type==='any-move') met = true;
-  else if(L.goal.type==='castle') met = !!isCastle;
-  else if(L.goal.type==='escape-check') met = !inCheck(gameState, moverColor);
-  else if(L.goal.type==='checkmate') met = gameStatus(gameState)==='checkmate';
-  else if(L.goal.type==='move-to'){
-    const targets = Array.isArray(L.goal.square) ? L.goal.square : [L.goal.square];
-    const targetIdxs = targets.map(algToIdx);
-    met = targetIdxs.includes(mv.to) && (!L.goal.requireCapture || !!capturedPiece);
-  }
-
-  if(met){
-    lessonGoalMet = true;
-    completedLessons.add(L.id);
-    queueSaveProgress();
-    setCoach("✅ "+L.success);
-    renderControls();
-    renderList();
-  } else {
-    setCoach("Pas encore ! "+L.hint);
-  }
-}
-
-/* ---------- Puzzles logic ---------- */
-function loadPuzzle(i){
-  if(!isPuzzleUnlocked(i)){
-    i = 0;
-    for(let k=PUZZLES.length-1;k>=0;k--){ if(isPuzzleUnlocked(k)){ i=k; break; } }
-    puzzleIdx = i;
-  }
-  const P = PUZZLES[i];
-  gameState = initState(parseRows(P.rows), P.turn, {wK:false,wQ:false,bK:false,bQ:false});
-  selected=null; legalTargets=[]; lastMove=null;
-  capturedByWhite=[]; capturedByBlack=[]; awaitingPromotion=null; moveHistory=[];
-  promoOverlay.innerHTML='';
-  renderMoves();
-  lessonTitle.textContent = P.title;
-  lessonDesc.textContent = P.desc;
-  setCoach("Réfléchis bien avant de jouer. Besoin d'un coup de pouce ? Clique sur « Indice ».");
-  renderControls();
-  renderList();
-  render();
-}
-
-function handlePuzzleMove(mv, moverColor){
-  const status = gameStatus(gameState);
-  if(status==='checkmate'){
-    solvedPuzzles.add(puzzleIdx);
-    queueSaveProgress();
-    setCoach("🏆 Échec et mat ! Puzzle résolu — bravo, ta lecture tactique est excellente.");
-    playSound('win');
-    renderList();
-  } else {
-    setCoach("Ce n'était pas la solution. " + PUZZLES[puzzleIdx].hint + " Clique sur « Réessayer » pour reprendre depuis le début.");
-  }
-  renderControls();
-}
+// loadPuzzle, handlePuzzleMove : voir chess-puzzles.js
 
 /* ---------- Practice vs AI ---------- */
 function startPractice(){
