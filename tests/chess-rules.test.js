@@ -46,8 +46,10 @@ function loadChessEngine() {
   const solitaireSource = fs.readFileSync(path.join(__dirname, '..', 'chess-mode-solitaire.js'), 'utf8');
   const progressServiceSource = fs.readFileSync(path.join(__dirname, '..', 'chess-progress-service.js'), 'utf8');
   const onlineContractSource = fs.readFileSync(path.join(__dirname, '..', 'chess-online-contract.js'), 'utf8');
+  const lessonsSource = fs.readFileSync(path.join(__dirname, '..', 'chess-lessons.js'), 'utf8');
+  const puzzlesSource = fs.readFileSync(path.join(__dirname, '..', 'chess-puzzles.js'), 'utf8');
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
-  const source = `${coreSource}\n${rulesSource}\n${historySource}\n${aiSource}\n${boardViewSource}\n${preferencesSource}\n${soundSource}\n${feedbackSource}\n${messagesSource}\n${modalSource}\n${clockSource}\n${modesSource}\n${solitaireSource}\n${progressServiceSource}\n${onlineContractSource}\n${appSource}`;
+  const source = `${coreSource}\n${rulesSource}\n${historySource}\n${aiSource}\n${boardViewSource}\n${preferencesSource}\n${soundSource}\n${feedbackSource}\n${messagesSource}\n${modalSource}\n${clockSource}\n${modesSource}\n${solitaireSource}\n${progressServiceSource}\n${onlineContractSource}\n${lessonsSource}\n${puzzlesSource}\n${appSource}`;
 
   const document = {
     getElementById() { return makeElement(); },
